@@ -6,6 +6,7 @@ const UpdateList = () => {
     const [name,setName]= useState()
     const [price,setPrice]= useState()
     const [quantity,setQuantity]= useState()
+    const [customId, setCustomId] = useState("")
     const navigate=useNavigate()
 
     useEffect(()=>{
@@ -14,6 +15,7 @@ const UpdateList = () => {
             setName(result.data.name)
             setPrice(result.data.price)
             setQuantity(result.data.quantity)
+            setCustomId(result.data.id);
         })
         .catch(err =>console.log(err))
     },[])
@@ -21,14 +23,16 @@ const UpdateList = () => {
 
 const Update=(e)=>{
     e.preventDefault()
-    axios.put("http://localhost:3001/updateList/"+id,{id,name,price,quantity})
-            .then(result => {
-                
-                console.log(result)
-                navigate('/')
-            })
-            .catch(err =>console.log(err))
-            }
+    console.log("Sending update for ID:", id)
+    console.log("With data:", {name, price, quantity})
+    
+    axios.put("http://localhost:3001/updateList/"+id, {name, price, quantity})
+        .then(result => {
+            console.log("Update result:", result.data)
+            navigate('/')
+        })
+        .catch(err => console.log("Update error:", err))
+    }
 
 
     return ( 
@@ -39,7 +43,7 @@ const Update=(e)=>{
                 <h2>Update Item</h2>
                 <div className='mb-2'>
                     <label htmlFor=''>Id</label>
-                    <input type="text" className='form-control' value={id}></input>
+                    <input type="text" className='form-control' value={customId}></input>
                    
                 </div>
                 <div className='mb-2'>
