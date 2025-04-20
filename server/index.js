@@ -24,7 +24,7 @@ app.get('/getGroceryList/:id',(req,res) =>{
 
 })
 
-app.put('/updateList/id',(req,res)=>{
+app.put('/updateList/:id',(req,res)=>{
     const id=req.params.id;
     UserModel.findByIdAndUpdate(id,{
         name:req.body.name,
@@ -32,6 +32,14 @@ app.put('/updateList/id',(req,res)=>{
         quantity:req.body.quantity}, { new: true })
     .then(users =>res.json(users ))
     .catch(err =>res.json(err))
+})
+
+
+app.delete('/deleteItem/:id',(req,res) =>{
+    const id=req.params.id;
+    UserModel.findByIdAndDelete({_id:id})
+    .then(res=>res.json(res))
+    .catch(err=>res.json(err))
 })
 
 
