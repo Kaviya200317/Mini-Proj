@@ -16,7 +16,7 @@ const AddItem = () => {
         .then(result => {
             
             console.log(result)
-            navigate('/')
+            navigate('/contribute/grocery')
         })
         .catch(err =>console.log(err))
         }

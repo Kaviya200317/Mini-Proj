@@ -29,7 +29,7 @@ const Update=(e)=>{
     axios.put("http://localhost:3001/updateList/"+id, {name, price, quantity})
         .then(result => {
             console.log("Update result:", result.data)
-            navigate('/')
+            navigate('/contribute/grocery')
         })
         .catch(err => console.log("Update error:", err))
     }
