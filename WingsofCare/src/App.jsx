@@ -1,14 +1,15 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
-import GroceryList from './Contribute/GroceryList'; // Your existing component
-import AddItem from './Contribute/AddItem'; // Your existing component
-import UpdateItem from './Contribute/updateList'; // Assuming you have this component
+import GroceryList from './Contribute/GroceryList'; 
+import AddItem from './Contribute/AddItem'; 
+import UpdateItem from './Contribute/updateList'; 
 import Home from './Home/Home'; 
 import Contribute from './Home/Contribute';
 import SponsorChild from './Contribute/SponsorChild';
 import Provisions from './Contribute/Provisions';
 import Profile from './Home/Profile';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
 function App() {
   return (
     <BrowserRouter>
