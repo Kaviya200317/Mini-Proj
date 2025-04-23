@@ -21,7 +21,7 @@ const AddItem = () => {
         .catch(err =>console.log(err))
         }
     return (
-        <div className="d-flex vh-100 bg-primary justify-content-center align-items-center">
+
             <div className="w-50 bg-white rounded p-3">
               <form onSubmit={Submit}>
                 <h2>Add Item</h2>
@@ -48,7 +48,7 @@ const AddItem = () => {
                
                
              </div>
-       </div>
+       
     );
 }
 
