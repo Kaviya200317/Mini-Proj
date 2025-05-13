@@ -1,10 +1,23 @@
 const mongoose = require('mongoose');
 
 const childSchema = new mongoose.Schema({
-  name: String,
-  age: Number,
-  description: String,
-  imagePath: String
+  name: {
+    type: String,
+    required: true,
+  },
+  age: {
+    type: Number,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  imagePath: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Child = mongoose.model('Child', childSchema);
