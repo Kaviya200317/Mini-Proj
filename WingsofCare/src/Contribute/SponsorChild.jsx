@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './SponsorChild.css'; // We'll create this CSS file
+import { Link } from 'react-router-dom';
+import '../css/SponsorChild.css'; // Using the new CSS file we created
 
 const SponsorChild = () => {
     const [children, setChildren] = useState([]);
@@ -14,18 +15,24 @@ const SponsorChild = () => {
     const [isAdding, setIsAdding] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchChildren();
     }, []);
 
     const fetchChildren = () => {
+        setLoading(true);
         axios.get('http://localhost:3001/children')
             .then(result => {
                 console.log("Data received:", result.data);
                 setChildren(result.data);
+                setLoading(false);
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err);
+                setLoading(false);
+            });
     };
 
     const handleDelete = (id) => {
@@ -152,215 +159,249 @@ const SponsorChild = () => {
     };
 
     return (
-        <div className="sponsor-container">
-            <div className="sponsor-card">
-                <div className="sponsor-card-header">
-                    <h3 className="sponsor-title">Children Profiles</h3>
-                    {!isAdding && !isEditing && (
-                        <button className="btn-add" onClick={() => setIsAdding(true)}>
-                            Add Child
-                        </button>
-                    )}
+        <div className="home-container">
+            {/* Navigation Bar would be here in your main layout */}
+            
+            {/* Hero Section for Sponsor Child */}
+            <div className="hero-section" style={{ height: '50vh' }}>
+                <div className="hero-content">
+                    <h1>Sponsor a Child</h1>
+                    <p>Make a lasting difference in a child's life through our sponsorship program</p>
                 </div>
-                <div className="sponsor-card-body">
-                    {isAdding && (
-                        <div className="form-container">
-                            <h4 className="form-title">Add New Child Profile</h4>
-                            <form onSubmit={handleAdd}>
-                                <div className="form-row">
-                                    <div className="form-column">
-                                        <div className="form-group">
-                                            <label className="form-label">Name</label>
-                                            <input 
-                                                type="text" 
-                                                className="form-input" 
-                                                name="name" 
-                                                value={newChild.name} 
-                                                onChange={handleInputChange} 
-                                                required 
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label className="form-label">Age</label>
-                                            <input 
-                                                type="number" 
-                                                className="form-input" 
-                                                name="age" 
-                                                value={newChild.age} 
-                                                onChange={handleInputChange} 
-                                                required 
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="form-column">
-                                        <div className="form-group">
-                                            <label className="form-label">Description</label>
-                                            <textarea 
-                                                className="form-textarea" 
-                                                name="description" 
-                                                value={newChild.description} 
-                                                onChange={handleInputChange} 
-                                                rows="3"
-                                                placeholder="Interests, hobbies, special notes..."
-                                                required
-                                            ></textarea>
-                                        </div>
-                                        <div className="form-group">
-                                            <label className="form-label">Photo</label>
-                                            <input 
-                                                type="file" 
-                                                className="form-file" 
-                                                onChange={handleImageChange} 
-                                                accept="image/*"
-                                                required
-                                            />
-                                        </div>
-                                        {previewImage && (
-                                            <div className="preview-container">
-                                                <img 
-                                                    src={previewImage} 
-                                                    alt="Preview" 
-                                                    className="preview-image" 
+            </div>
+            
+            <div className="sponsor-container">
+                <div className="sponsor-card">
+                    <div className="sponsor-card-header">
+                        <h3 className="sponsor-title">Children Profiles</h3>
+                        {!isAdding && !isEditing && (
+                            <button className="btn-add" onClick={() => setIsAdding(true)}>
+                                Add Child
+                            </button>
+                        )}
+                    </div>
+                    <div className="sponsor-card-body">
+                        {isAdding && (
+                            <div className="form-container">
+                                <h4 className="form-title">Add New Child Profile</h4>
+                                <form onSubmit={handleAdd}>
+                                    <div className="form-row">
+                                        <div className="form-column">
+                                            <div className="form-group">
+                                                <label className="form-label">Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="form-input" 
+                                                    name="name" 
+                                                    value={newChild.name} 
+                                                    onChange={handleInputChange} 
+                                                    required 
                                                 />
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="form-actions">
-                                    <button type="button" className="btn-cancel" onClick={cancelAdd}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn-save">
-                                        Save Profile
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
-
-                    {isEditing && editingChild && (
-                        <div className="form-container">
-                            <h4 className="form-title">Edit Child Profile</h4>
-                            <form onSubmit={handleUpdate}>
-                                <div className="form-row">
-                                    <div className="form-column">
-                                        <div className="form-group">
-                                            <label className="form-label">Name</label>
-                                            <input 
-                                                type="text" 
-                                                className="form-input" 
-                                                name="name" 
-                                                value={editingChild.name} 
-                                                onChange={handleInputChange} 
-                                                required 
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label className="form-label">Age</label>
-                                            <input 
-                                                type="number" 
-                                                className="form-input" 
-                                                name="age" 
-                                                value={editingChild.age} 
-                                                onChange={handleInputChange} 
-                                                required 
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="form-column">
-                                        <div className="form-group">
-                                            <label className="form-label">Description</label>
-                                            <textarea 
-                                                className="form-textarea" 
-                                                name="description" 
-                                                value={editingChild.description || ''} 
-                                                onChange={handleInputChange} 
-                                                rows="3"
-                                                placeholder="Interests, hobbies, special notes..."
-                                                required
-                                            ></textarea>
-                                        </div>
-                                        <div className="form-group">
-                                            <label className="form-label">Photo</label>
-                                            <input 
-                                                type="file" 
-                                                className="form-file" 
-                                                onChange={handleImageChange} 
-                                                accept="image/*"
-                                            />
-                                            <small className="text-hint">Leave empty to keep current photo</small>
-                                        </div>
-                                        {previewImage && (
-                                            <div className="preview-container">
-                                                <img 
-                                                    src={previewImage} 
-                                                    alt="Preview" 
-                                                    className="preview-image" 
+                                            <div className="form-group">
+                                                <label className="form-label">Age</label>
+                                                <input 
+                                                    type="number" 
+                                                    className="form-input" 
+                                                    name="age" 
+                                                    value={newChild.age} 
+                                                    onChange={handleInputChange} 
+                                                    required 
                                                 />
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="form-actions">
-                                    <button type="button" className="btn-cancel" onClick={cancelEdit}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn-update">
-                                        Update Profile
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
-
-                    {!isAdding && !isEditing && (
-                        <div className="children-grid">
-                            {children.length > 0 ? (
-                                children.map((child) => (
-                                    <div key={child._id} className="child-card">
-                                        <div className="child-image-container">
-                                            {child.imagePath ? (
-                                                <img 
-                                                    src={`http://localhost:3001/uploads/${child.imagePath}`} 
-                                                    alt={child.name} 
-                                                    className="child-image" 
+                                        </div>
+                                        <div className="form-column">
+                                            <div className="form-group">
+                                                <label className="form-label">Description</label>
+                                                <textarea 
+                                                    className="form-textarea" 
+                                                    name="description" 
+                                                    value={newChild.description} 
+                                                    onChange={handleInputChange} 
+                                                    rows="3"
+                                                    placeholder="Interests, hobbies, special notes..."
+                                                    required
+                                                ></textarea>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Photo</label>
+                                                <input 
+                                                    type="file" 
+                                                    className="form-file" 
+                                                    onChange={handleImageChange} 
+                                                    accept="image/*"
+                                                    required
                                                 />
-                                            ) : (
-                                                <div className="child-no-image">
-                                                    <span>No image</span>
+                                            </div>
+                                            {previewImage && (
+                                                <div className="preview-container">
+                                                    <img 
+                                                        src={previewImage} 
+                                                        alt="Preview" 
+                                                        className="preview-image" 
+                                                    />
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="child-content">
-                                            <h5 className="child-name">{child.name}</h5>
-                                            <p className="child-age">Age: {child.age}</p>
-                                            <p className="child-description">{child.description}</p>
+                                    </div>
+                                    <div className="form-actions">
+                                        <button type="button" className="btn-cancel" onClick={cancelAdd}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn-save">
+                                            Save Profile
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {isEditing && editingChild && (
+                            <div className="form-container">
+                                <h4 className="form-title">Edit Child Profile</h4>
+                                <form onSubmit={handleUpdate}>
+                                    <div className="form-row">
+                                        <div className="form-column">
+                                            <div className="form-group">
+                                                <label className="form-label">Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="form-input" 
+                                                    name="name" 
+                                                    value={editingChild.name} 
+                                                    onChange={handleInputChange} 
+                                                    required 
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Age</label>
+                                                <input 
+                                                    type="number" 
+                                                    className="form-input" 
+                                                    name="age" 
+                                                    value={editingChild.age} 
+                                                    onChange={handleInputChange} 
+                                                    required 
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="child-actions">
-                                            <button 
-                                                className="btn-edit" 
-                                                onClick={() => startEdit(child)}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button 
-                                                className="btn-delete" 
-                                                onClick={() => handleDelete(child._id)}
-                                            >
-                                                Delete
-                                            </button>
+                                        <div className="form-column">
+                                            <div className="form-group">
+                                                <label className="form-label">Description</label>
+                                                <textarea 
+                                                    className="form-textarea" 
+                                                    name="description" 
+                                                    value={editingChild.description || ''} 
+                                                    onChange={handleInputChange} 
+                                                    rows="3"
+                                                    placeholder="Interests, hobbies, special notes..."
+                                                    required
+                                                ></textarea>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Photo</label>
+                                                <input 
+                                                    type="file" 
+                                                    className="form-file" 
+                                                    onChange={handleImageChange} 
+                                                    accept="image/*"
+                                                />
+                                                <small className="text-hint">Leave empty to keep current photo</small>
+                                            </div>
+                                            {previewImage && (
+                                                <div className="preview-container">
+                                                    <img 
+                                                        src={previewImage} 
+                                                        alt="Preview" 
+                                                        className="preview-image" 
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="no-children">
-                                    <p>No children profiles found. Click "Add Child" to create one!</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                    <div className="form-actions">
+                                        <button type="button" className="btn-cancel" onClick={cancelEdit}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn-update">
+                                            Update Profile
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {!isAdding && !isEditing && (
+                            <>
+                                {loading ? (
+                                    <div className="loading-container">
+                                        <p>Loading children profiles...</p>
+                                    </div>
+                                ) : (
+                                    <div className="children-grid">
+                                        {children.length > 0 ? (
+                                            children.map((child) => (
+                                                <div key={child._id} className="child-card">
+                                                    <div className="child-image-container">
+                                                        {child.imagePath ? (
+                                                            <img 
+                                                                src={`http://localhost:3001/uploads/${child.imagePath}`} 
+                                                                alt={child.name} 
+                                                                className="child-image" 
+                                                            />
+                                                        ) : (
+                                                            <div className="child-no-image">
+                                                                <span>No image</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="child-content">
+                                                        <h5 className="child-name">{child.name}</h5>
+                                                        <p className="child-age">Age: {child.age}</p>
+                                                        <p className="child-description">{child.description}</p>
+                                                    </div>
+                                                    <div className="child-actions">
+                                                        <button 
+                                                            className="btn-edit" 
+                                                            onClick={() => startEdit(child)}
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button 
+                                                            className="btn-delete" 
+                                                            onClick={() => handleDelete(child._id)}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="no-children">
+                                                <p>No children profiles found. Click "Add Child" to create one!</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
+            
+            {/* Call to Action Section */}
+            <section className="cta-section">
+                <div className="section-container">
+                    <h2>Make a Difference Today</h2>
+                    <p>Your support can transform a child's life through education, healthcare, and loving care.</p>
+                    <div className="cta-buttons">
+                        <Link to="/donate" className="btn primary-btn">Donate Now</Link>
+                        <Link to="/contact" className="btn secondary-btn">Get Involved</Link>
+                    </div>
+                </div>
+            </section>
+            
+            {/* Footer would be in your main layout */}
         </div>
     );
 }
