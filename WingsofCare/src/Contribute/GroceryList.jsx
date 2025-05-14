@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
+import "../css/GroceryList.css"
 const GroceryList = () => {
     const [users,setUsers]=useState([])
     useEffect(()=>{

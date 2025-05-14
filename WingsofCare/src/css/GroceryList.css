@@ -1,0 +1,341 @@
+/* Additional Responsive Design Updates */
+@media (max-width: 992px) {
+  .w-50 {
+    width: 70%;
+  }
+}
+
+/* Media queries for Add button alignment */
+@media (max-width: 768px) {
+  .p-3 > h3 {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .p-3 > .btn-success:first-of-type,
+  .p-3 > a.btn.btn-success:first-of-type {
+    float: none;
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .w-50 {
+    width: 90%;
+    margin: 20px auto;
+  }
+  
+  .p-3 {
+    padding: 20px;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+  }
+  
+  .btn {
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .w-50 {
+    width: 95%;
+  }
+  
+  .p-3 {
+    padding: 15px;
+  }
+  
+  h3 {
+    font-size: 1.3rem;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+  }
+}/* Grocery List Styles - Matching app.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  line-height: 1.6;
+  background-color: #f9f9f9;
+}
+
+/* Container with Title and Button */
+.w-50 {
+  width: 50%;
+  margin: 40px auto;
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.w-50:hover {
+  box-shadow: 0 20px 40px rgba(75, 108, 183, 0.15);
+}
+
+.bg-white {
+  background-color: #ffffff;
+}
+
+.rounded {
+  border-radius: 15px;
+}
+
+.p-3 {
+  padding: 30px;
+}
+
+/* Heading and Button Layout */
+.p-3 > h3 {
+  display: inline-block;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+
+.p-3 > .btn-success:first-of-type,
+.p-3 > a.btn.btn-success:first-of-type {
+  float: right;
+  margin-top: 5px;
+}
+
+/* Clear float */
+.p-3::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Heading Styles */
+h3 {
+  font-weight: 700;
+  line-height: 1.3;
+  color: #4b6cb7;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  position: relative;
+  display: inline-block;
+}
+
+h3::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(to right, #4b6cb7, #182848);
+  border-radius: 3px;
+}
+
+/* Button Styles */
+.btn {
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  margin-right: 10px;
+  margin-bottom: 20px;
+  display: inline-block;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success {
+  background: linear-gradient(to right, #4b6cb7, #182848);
+  color: white;
+  border: none;
+  text-decoration: none;
+}
+
+.btn-success:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(75, 108, 183, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(to right, #ff4d4d, #cc0000);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(204, 0, 0, 0.4);
+}
+
+/* Enhanced Table Styles */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table th, 
+.table td {
+  padding: 16px 20px;
+  text-align: left;
+}
+
+.table th {
+  font-weight: 600;
+  color: #4b6cb7;
+  background-color: #f0f4ff;
+  position: relative;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e0e8ff;
+}
+
+.table th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background-color: rgba(75, 108, 183, 0.2);
+}
+
+.table td {
+  border-bottom: 1px solid #eee;
+  font-weight: 400;
+  transition: all 0.3s ease;
+}
+
+.table tbody tr {
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(75, 108, 183, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Highlight total column */
+.table td:nth-child(5) {
+  font-weight: 600;
+  color: #4b6cb7;
+}
+
+/* Alternating row colors for better readability */
+.table tbody tr:nth-child(even) {
+  background-color: #f8f9ff;
+}
+
+/* Link Styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Action Column Styles */
+.table td:last-child {
+  display: flex;
+  gap: 10px;
+}
+
+.table td:last-child .btn {
+  margin-bottom: 0;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+}
+
+/* Stylish Number Formatting */
+.table td:nth-child(3)::before,
+.table td:nth-child(5)::before {
+  content: '₹';
+  opacity: 0.7;
+  margin-right: 2px;
+}
+
+/* Column width adjustments */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 8%;
+  font-weight: 600;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 25%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3),
+.table th:nth-child(4),
+.table td:nth-child(4),
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 15%;
+}
+
+/* Enhanced responsive design for table */
+@media (max-width: 768px) {
+  .table thead {
+    display: none;
+  }
+  
+  .table, .table tbody, .table tr, .table td {
+    display: block;
+    width: 100%;
+  }
+  
+  .table tr {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #4b6cb7;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+  
+  .table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 45%;
+    padding-left: 15px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: left;
+    color: #4b6cb7;
+  }
+  
+  .table td:last-child {
+    display: flex;
+    justify-content: flex-end;
+    padding-left: 15px;
+  }
+}
