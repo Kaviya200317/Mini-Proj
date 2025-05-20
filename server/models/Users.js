@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -49,6 +53,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 };
 
 // Create User model
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('login', userSchema);
 
 module.exports = User;

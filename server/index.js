@@ -13,6 +13,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -66,6 +69,10 @@ const childSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  amount: {
+    type: Number,
+    default: 0
+  },
   imagePath: String,
   createdAt: {
     type: Date,
@@ -75,6 +82,70 @@ const childSchema = new mongoose.Schema({
 
 // Create Child model using the children connection
 const ChildModel = childrenConnection.model("Child", childSchema);
+
+// Define Payment schema
+const paymentSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  item_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'GroceryList',
+    required: true
+  },
+  payment_id: {
+    type: String,
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true
+  },
+  item_name: {
+    type: String,
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['completed', 'failed', 'pending'],
+    default: 'completed'
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Create Payment model
+const Payment = mongoose.model('Payment', paymentSchema);
+
+// Middleware to verify JWT and get user
+const verifyToken = (req, res, next) => {
+  // Get token from header
+  const bearerHeader = req.headers.authorization;
+  
+  if (!bearerHeader) {
+    return res.status(401).json({ message: "Access denied. No token provided." });
+  }
+  
+  // Extract token from Bearer header
+  const token = bearerHeader.split(' ')[1];
+  
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded; // Add user data to request
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
 
 // ----- GROCERY LIST ROUTES -----
 app.get("/", (req, res) => {
@@ -94,8 +165,15 @@ app.get("/getGroceryList/:id", (req, res) => {
     .catch((err) => res.json(err));
 });
 
-app.put("/updateList/:id", (req, res) => {
+// Require admin permission for updates
+app.put("/updateList/:id", verifyToken, (req, res) => {
   const id = req.params.id;
+  
+  // Check if user is admin
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: "Not authorized. Admin access required." });
+  }
+  
   UserModel.findByIdAndUpdate(
     id,
     {
@@ -109,17 +187,109 @@ app.put("/updateList/:id", (req, res) => {
     .catch((err) => res.json(err));
 });
 
-app.delete("/deleteItem/:id", (req, res) => {
+// Require admin permission for deletes
+app.delete("/deleteItem/:id", verifyToken, (req, res) => {
   const id = req.params.id;
+  
+  // Check if user is admin
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: "Not authorized. Admin access required." });
+  }
+  
   UserModel.findByIdAndDelete({ _id: id })
-    .then((result) => res.json(result)) // Fixed variable shadowing issue
+    .then((result) => res.json(result))
     .catch((err) => res.json(err));
 });
 
-app.post("/addItem", (req, res) => {
+// Require admin permission for creation
+app.post("/addItem", verifyToken, (req, res) => {
+  // Check if user is admin
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: "Not authorized. Admin access required." });
+  }
+  
   UserModel.create(req.body)
     .then((users) => res.json(users))
     .catch((err) => res.json(err));
+});
+
+// ----- PAYMENT ROUTES -----
+
+// Save payment details
+app.post("/api/save-payment", verifyToken, async (req, res) => {
+  try {
+    const { item_id, payment_id, amount, item_name, quantity, status = 'completed' } = req.body;
+    
+    // Create new payment record
+    const payment = new Payment({
+      user_id: req.user.id,
+      item_id,
+      payment_id,
+      amount,
+      item_name,
+      quantity,
+      status,
+      timestamp: new Date()
+    });
+    
+    await payment.save();
+    
+    res.json({ 
+      success: true, 
+      message: "Payment saved successfully",
+      payment: payment
+    });
+  } catch (error) {
+    console.error("Error saving payment:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error saving payment details" 
+    });
+  }
+});
+
+// Get payment history for current user
+app.get("/api/payment-history", verifyToken, async (req, res) => {
+  try {
+    const payments = await Payment.find({ user_id: req.user.id })
+      .sort({ timestamp: -1 }); // Sort by latest first
+    
+    res.json({ 
+      success: true, 
+      payments: payments 
+    });
+  } catch (error) {
+    console.error("Error fetching payment history:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error fetching payment history" 
+    });
+  }
+});
+
+// Get all payments (admin only)
+app.get("/api/all-payments", verifyToken, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: "Not authorized. Admin access required." });
+    }
+    
+    const payments = await Payment.find({})
+      .populate('user_id', 'name email')
+      .sort({ timestamp: -1 });
+    
+    res.json({ 
+      success: true, 
+      payments: payments 
+    });
+  } catch (error) {
+    console.error("Error fetching all payments:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error fetching payments" 
+    });
+  }
 });
 
 // ----- CHILDREN PROFILES ROUTES -----
@@ -150,6 +320,7 @@ app.post("/children", upload.single("image"), (req, res) => {
       name: req.body.name,
       age: req.body.age,
       description: req.body.description,
+      amount: req.body.amount || 0,
     };
 
     // If image is uploaded, add the path to the item
@@ -172,6 +343,7 @@ app.put("/children/:id", upload.single("image"), (req, res) => {
     name: req.body.name,
     age: req.body.age,
     description: req.body.description,
+    amount: req.body.amount || 0,
   };
 
   // If new image is uploaded, add it to update data
@@ -228,9 +400,12 @@ app.delete("/children/:id", (req, res) => {
     .catch((err) => res.status(500).json({ error: err.message }));
 });
 
+// ----- AUTH ROUTES -----
+
+// Register endpoint
 app.post("/api/auth/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -238,17 +413,16 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Hash password
-    // const saltRounds = 10;
-    // const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Set isAdmin true if email is admin@example.com (for testing purposes)
+    const isAdmin = email.toLowerCase() === 'admin@example.com';
 
-    // console.log('init',hashedPassword)
-
-    // Create new user
+    // Create new user with phone field
     const user = new User({
       name,
       email,
-      password: password,
+      password, // Will be hashed in pre-save hook
+      phone,
+      isAdmin
     });
 
     await user.save();
@@ -271,18 +445,21 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    console.log('compare',user.password)
-
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Create JWT token
+    // Create JWT token with user data
     const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || "your_jwt_secret_key", // Add a fallback secret key
+      { 
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin 
+      },
+      JWT_SECRET,
       { expiresIn: "1d" }
     );
 
@@ -291,12 +468,89 @@ app.post("/api/auth/login", async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
+      isAdmin: user.isAdmin,
       token,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+// Get user profile
+app.get("/api/user/profile", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error" 
+    });
+  }
+});
+
+// Update user profile
+app.put("/api/user/profile", verifyToken, async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    
+    // Find user
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+    
+    // Update fields
+    if (name) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+      }
+    });
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error" 
+    });
+  }
+});
+
+// Logout route - just for completeness, actual logout happens client-side
+app.post("/api/auth/logout", (req, res) => {
+  res.json({ 
+    success: true, 
+    message: "Logged out successfully" 
+  });
 });
 
 const PORT = process.env.PORT || 3001;

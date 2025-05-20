@@ -6,5 +6,5 @@
         quantity: Number
     })
 
-    const UserModel=mongoose.model("users",UserSchema)
+    const UserModel=mongoose.model("grocerylists",UserSchema)
     module.exports=UserModel

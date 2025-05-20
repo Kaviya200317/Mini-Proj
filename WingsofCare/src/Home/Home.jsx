@@ -99,38 +99,13 @@ const Home = () => {
           <h2>Make a Difference Today</h2>
           <p>Your support can help provide care, education, and opportunities for children in need.</p>
           <div className="cta-buttons">
-            <Link to="/donate" className="btn primary-btn">Donate Now</Link>
+            <Link to="/contribute/sponsor" className="btn primary-btn">Donate Now</Link>
             <Link to="/contact" className="btn secondary-btn">Get Involved</Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>WingsofCare</h3>
-            <p>Empowering children through care, education, and love since 2009.</p>
-          </div>
-          <div className="footer-section">
-            <h3>Contact Us</h3>
-            <p>123 Care Street, Coimbatore, TamilNadu </p>
-            <p>Phone: +91 98765 43210</p>
-            <p>Email: info@wingsofcare.org</p>
-          </div>
-          <div className="footer-section">
-            <h3>Follow Us</h3>
-            <div className="social-links">
-              <a href="#" className="social-icon facebook-icon">Facebook</a>
-              <a href="#" className="social-icon instagram-icon">Instagram</a>
-              <a href="#" className="social-icon twitter-icon">Twitter</a>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>&copy; 2025 WingsofCare. All rights reserved.</p>
-        </div>
-      </footer>
+      
     </div>
   );
 };

@@ -16,6 +16,7 @@ import { AuthProvider, useAuth } from './components/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
+import About from './Home/About';
 
 const Navigation = () => {
   const { currentUser, logout } = useAuth();
@@ -36,7 +37,7 @@ const Navigation = () => {
               <div className="dropdown-content">
                 <Link to="/contribute/sponsor" className="dropdown-item">Sponsor a Child</Link>
                 <Link to="/contribute/provisions" className="dropdown-item">Provisions</Link>
-                <Link to="/contribute/grocery" className="dropdown-item">Grocery List</Link>
+                {/* <Link to="/contribute/grocery" className="dropdown-item">Grocery List</Link> */}
               </div>
             </div>
             <NavLink to="/profile" className={({isActive}) => isActive ? "nav-link active" : "nav-link"}>Profile</NavLink>
@@ -138,6 +139,7 @@ function App() {
             } />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+             <Route path="/about" element={<About />} />
           </Routes>
         </div>
         <Footer />

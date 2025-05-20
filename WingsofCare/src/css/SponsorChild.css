@@ -36,7 +36,7 @@
 }
 
 /* Buttons */
-.btn-add, .btn-save, .btn-update, .btn-cancel, .btn-edit, .btn-delete {
+.btn-add, .btn-save, .btn-update, .btn-cancel, .btn-edit, .btn-delete ,.btn-sponsor{
   padding: 10px 20px;
   border-radius: 30px;
   font-weight: 500;
@@ -82,7 +82,7 @@
   background-color: rgba(75, 108, 183, 0.1);
 }
 
-.btn-edit {
+.btn-edit, .btn-sponsor {
   background-color: rgba(75, 108, 183, 0.1);
   color: #4b6cb7;
   margin-right: 10px;
@@ -90,6 +90,16 @@
 
 .btn-edit:hover {
   background-color: #4b6cb7;
+  color: white;
+}
+.btn-sponsor:hover{
+   background-color: #4b6cb7;
+  color: white;
+}
+.btn-sponsor{
+  margin-bottom: 10px;
+  margin-left:15px;
+    background-color: #4b6cb7;
   color: white;
 }
 
@@ -186,6 +196,7 @@
   height: auto;
   display: block;
 }
+
 
 /* Children grid */
 .children-grid {

@@ -44,7 +44,7 @@ const Contribute = () => {
           </div>
         </div>
         
-        <div className="col-md-6">
+        {/* <div className="col-md-6">
           <div className="card mb-4">
             <div className="card-body">
               <h5 className="card-title">Grocery List</h5>
@@ -52,7 +52,7 @@ const Contribute = () => {
               <Link to="/contribute/grocery" className="btn btn-primary">Manage Grocery List</Link>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

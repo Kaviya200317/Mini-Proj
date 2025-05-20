@@ -1,4 +1,4 @@
-// Modified AuthContext.js
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false); // Added isAdmin state
 
   // Hardcoded API URL - replace with your actual backend URL
   const API_URL = 'http://localhost:3001/api';
@@ -28,14 +29,21 @@ export function AuthProvider({ children }) {
           // Set default authorization header for all requests
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
-          // Use stored user data instead of making a request
-          setCurrentUser(JSON.parse(userData));
+          // Parse stored user data
+          const parsedUserData = JSON.parse(userData);
+          
+          // Set current user
+          setCurrentUser(parsedUserData);
+          
+          // Set admin status
+          setIsAdmin(parsedUserData.isAdmin === true);
         }
       } catch (error) {
         // If token is invalid, clear it
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
         axios.defaults.headers.common['Authorization'] = '';
+        setIsAdmin(false);
       } finally {
         setLoading(false);
       }
@@ -64,7 +72,8 @@ export function AuthProvider({ children }) {
       const user = {
         id: response.data.id,
         name: response.data.name,
-        email: response.data.email
+        email: response.data.email,
+        isAdmin: response.data.isAdmin // Store isAdmin from response
       };
       
       localStorage.setItem('authToken', token);
@@ -73,8 +82,9 @@ export function AuthProvider({ children }) {
       // Set default headers for future requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Update user state
+      // Update user state and admin status
       setCurrentUser(user);
+      setIsAdmin(user.isAdmin === true);
       setAuthError('');
       return user;
     } catch (error) {
@@ -106,6 +116,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('userData');
     axios.defaults.headers.common['Authorization'] = '';
     setCurrentUser(null);
+    setIsAdmin(false); // Reset admin status on logout
   };
 
   // Registration function
@@ -126,6 +137,19 @@ export function AuthProvider({ children }) {
       throw error;
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check if user is admin
+  const checkAdminStatus = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/check-admin`);
+      setIsAdmin(response.data.isAdmin === true);
+      return response.data.isAdmin;
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setIsAdmin(false);
+      return false;
     }
   };
 
@@ -157,7 +181,18 @@ export function AuthProvider({ children }) {
     
     try {
       const response = await axios.put(`${API_URL}/users/me`, userData);
-      setCurrentUser(response.data);
+      
+      // Update localStorage with new user data
+      const updatedUser = {
+        ...currentUser,
+        ...response.data,
+        isAdmin: response.data.isAdmin || currentUser.isAdmin // Preserve isAdmin if not in response
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
+      
+      setCurrentUser(updatedUser);
+      setIsAdmin(updatedUser.isAdmin === true);
       return response.data;
     } catch (error) {
       throw error;
@@ -170,9 +205,11 @@ export function AuthProvider({ children }) {
     currentUser,
     loading,
     authError,
+    isAdmin, // Expose isAdmin to consumers
     login,
     logout,
     register,
+    checkAdminStatus, // Expose function to check admin status
     requestPasswordReset,
     resetPassword,
     updateProfile
