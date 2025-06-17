@@ -212,7 +212,7 @@ const Profile = () => {
                       onChange={handleInputChange}
                     />
                   ) : (
-                    <p className="profile-value">{userProfile.phone || 'Not provided'}</p>
+                    <p className="profile-value">{userProfile.phone || '9876723453'}</p>
                   )}
                 </div>
 

@@ -73,7 +73,7 @@ const Footer = () => {
         </div>
         <div className="footer-section">
           <h3>Contact Us</h3>
-          <p>123 Care Street, Bangalore, Karnataka</p>
+          <p>123 Care Street, Coimbatore, Tamilnadu</p>
           <p>Phone: +91 98765 43210</p>
           <p>Email: info@wingsofcare.org</p>
         </div>

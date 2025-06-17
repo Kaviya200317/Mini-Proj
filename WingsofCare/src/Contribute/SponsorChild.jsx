@@ -18,10 +18,21 @@ const SponsorChild = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [loading, setLoading] = useState(true);
+    const [paidChildren, setPaidChildren] = useState(new Set()); // Track paid children
     const { isAdmin } = useAuth(); // Get the isAdmin status from auth context
 
     useEffect(() => {
         fetchChildren();
+        // Load Razorpay script
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+
+        return () => {
+            // Cleanup script when component unmounts
+            document.body.removeChild(script);
+        };
     }, []);
 
     const fetchChildren = () => {
@@ -36,6 +47,61 @@ const SponsorChild = () => {
                 console.log(err);
                 setLoading(false);
             });
+    };
+
+    // Razorpay payment handler
+    const handlePayment = (child) => {
+        const options = {
+            key: 'rzp_test_FSW72bhFCYhm4D', // Replace with your actual Razorpay Key ID
+            amount: (child.amount || 100) * 100, // Amount in paise (multiply by 100)
+            currency: 'INR',
+            name: 'Child Sponsorship',
+            description: `Donation for ${child.name}`,
+            image: child.imagePath ? `http://localhost:3001/uploads/${child.imagePath}` : '/logo.png', // Your logo
+            handler: function (response) {
+                // Payment successful
+                alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+                console.log('Payment Response:', response);
+                
+                // Mark this child as paid
+                setPaidChildren(prev => new Set([...prev, child._id]));
+                
+                // Here you can send the payment details to your backend for verification
+                // Example:
+                // axios.post('/api/verify-payment', {
+                //     payment_id: response.razorpay_payment_id,
+                //     child_id: child._id,
+                //     amount: child.amount
+                // });
+            },
+            prefill: {
+                name: '', // You can prefill user details if available
+                email: '',
+                contact: ''
+            },
+            notes: {
+                child_id: child._id,
+                child_name: child.name,
+                donation_type: 'child_sponsorship'
+            },
+            theme: {
+                color: '#3399cc'
+            },
+            modal: {
+                ondismiss: function() {
+                    console.log('Payment modal closed');
+                }
+            }
+        };
+
+        const rzp = new window.Razorpay(options);
+        
+        rzp.on('payment.failed', function (response) {
+            alert('Payment failed! Please try again.');
+            console.log('Payment Failed:', response.error);
+        });
+
+        rzp.open();
     };
 
     const handleDelete = (id) => {
@@ -389,9 +455,21 @@ const SponsorChild = () => {
                                                         <p className="child-description">{child.description}</p>
                                                     </div>
                                                     <div className="child-sponsor">
-                                                        <button className="btn-sponsor">
-                                                            Donate ${child.amount || '0'}
-                                                        </button>
+                                                        {paidChildren.has(child._id) ? (
+                                                            <button 
+                                                                className="btn-sponsor btn-paid"
+                                                                disabled
+                                                            >
+                                                                ✓ Paid
+                                                            </button>
+                                                        ) : (
+                                                            <button 
+                                                                className="btn-sponsor"
+                                                                onClick={() => handlePayment(child)}
+                                                            >
+                                                                Donate ₹{child.amount || '100'}
+                                                            </button>
+                                                        )}
                                                     </div>
                                                     {/* Only show edit and delete buttons if user is admin */}
                                                     {isAdmin && (

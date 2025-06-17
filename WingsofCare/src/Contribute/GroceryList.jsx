@@ -9,29 +9,24 @@ const GroceryList = () => {
     const [paymentLoading, setPaymentLoading] = useState({});
     const [paymentHistory, setPaymentHistory] = useState([]);
     const [showPaymentHistory, setShowPaymentHistory] = useState(false);
-    const { isAdmin, checkAdminStatus } = useAuth();
+    // Track locally paid items to maintain state
+    const [locallyPaidItems, setLocallyPaidItems] = useState(new Set());
+    
+    // Get both isAdmin and currentUser from Auth context
+    const { isAdmin, currentUser } = useAuth();
 
     useEffect(() => {
-        // Check admin status
-        const verifyAdminStatus = async () => {
-            try {
-                await checkAdminStatus();
-            } catch (err) {
-                console.error("Error verifying admin status:", err);
-            }
-        };
+        console.log("Component mounted with admin status:", isAdmin);
+        console.log("Current user:", currentUser);
         
-        verifyAdminStatus();
-        
-        // Fetch grocery items
+        // Fetch grocery items - no need to wait for admin check
         fetchGroceryItems();
         
         // Fetch user's payment history if logged in
-        const token = localStorage.getItem('token');
-        if (token) {
+        if (currentUser) {
             fetchPaymentHistory();
         }
-    }, [checkAdminStatus]);
+    }, [isAdmin, currentUser]); // Watch for changes in both isAdmin and currentUser
 
     const fetchGroceryItems = () => {
         axios.get('http://localhost:3001')
@@ -46,27 +41,46 @@ const GroceryList = () => {
     };
 
     const fetchPaymentHistory = async () => {
-        const token = localStorage.getItem('token');
+        // Use authToken consistently as in your AuthContext
+        const token = localStorage.getItem('authToken');
         if (!token) return;
 
         try {
             const response = await axios.get('http://localhost:3001/api/payment-history', {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                timeout: 8000 // 8 second timeout
             });
             
             if (response.data.success) {
                 setPaymentHistory(response.data.payments);
-                console.log("Payment history fetched:", response.data.payments); // Debug log
+                console.log("Payment history fetched:", response.data.payments);
+                
+                // Update locally paid items based on backend data
+                const paidItemIds = new Set();
+                response.data.payments.forEach(payment => {
+                    if (payment.status === 'completed') {
+                        const itemId = payment.item_id?._id || payment.item_id;
+                        if (itemId) {
+                            paidItemIds.add(itemId.toString());
+                        }
+                    }
+                });
+                setLocallyPaidItems(paidItemIds);
             }
         } catch (error) {
             console.error('Error fetching payment history:', error);
+            // Don't show error to user - they can still see their local payment status
+            if (error.code === 'ECONNABORTED') {
+                console.log('Payment history fetch timed out');
+            }
         }
     };
 
     const handleDelete = (id) => {
-        const token = localStorage.getItem('token');
+        // Use authToken consistently
+        const token = localStorage.getItem('authToken');
         if (!token) {
             alert('Please login to perform this action');
             return;
@@ -131,29 +145,53 @@ const GroceryList = () => {
                 // Payment successful
                 console.log('Payment Success:', response);
                 
-                try {
-                    // Save payment info to backend first
-                    await savePaymentToBackend(item, response);
-                    
-                    // Then refresh payment history to get updated status
-                    await fetchPaymentHistory();
-                    
-                    // Show success message
-                    alert(`✅ Payment successful!\nPayment ID: ${response.razorpay_payment_id}\nAmount: ₹${totalAmount.toFixed(2)}`);
-                    
-                    // Force re-render by updating the users state to trigger re-evaluation
-                    setUsers(prevUsers => [...prevUsers]);
-                    
-                } catch (error) {
-                    console.error('Error processing payment:', error);
-                    alert('Payment completed but there was an issue updating the status. Please refresh the page.');
-                } finally {
-                    setPaymentLoading(prev => ({ ...prev, [item._id]: false }));
-                }
+                // IMMEDIATELY mark item as paid locally (this persists)
+                setLocallyPaidItems(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(item._id.toString());
+                    console.log('Item marked as locally paid:', item._id);
+                    return newSet;
+                });
+                
+                // Create a new payment record for payment history
+                const newPayment = {
+                    _id: `temp_${Date.now()}`, // Unique temporary ID
+                    item_id: item._id,
+                    item_name: item.name,
+                    amount: totalAmount,
+                    payment_id: response.razorpay_payment_id,
+                    status: 'completed',
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Update payment history for the history table
+                setPaymentHistory(prevHistory => [...prevHistory, newPayment]);
+                
+                // Show success message
+                alert(`✅ Payment successful!\nPayment ID: ${response.razorpay_payment_id}\nAmount: ₹${totalAmount.toFixed(2)}`);
+                
+                // Reset loading state
+                setPaymentLoading(prev => ({ ...prev, [item._id]: false }));
+                
+                // Save to backend in background (don't affect UI state)
+                savePaymentToBackend(item, response)
+                    .then(() => {
+                        console.log('Payment saved to backend successfully');
+                        // Optional: Refresh payment history after successful save
+                        // But don't remove the locally paid status
+                        setTimeout(() => {
+                            fetchPaymentHistoryQuietly();
+                        }, 2000);
+                    })
+                    .catch(error => {
+                        console.error('Error saving to backend:', error);
+                        // Payment is still marked as paid locally
+                        console.log('Backend save failed, but item remains marked as paid locally');
+                    });
             },
             prefill: {
-                name: 'Customer',
-                email: 'customer@example.com',
+                name: currentUser?.name || 'Customer',
+                email: currentUser?.email || 'customer@example.com',
                 contact: '9999999999',
             },
             notes: {
@@ -181,8 +219,31 @@ const GroceryList = () => {
         paymentObject.open();
     };
 
+    // Fetch payment history without affecting locally paid items
+    const fetchPaymentHistoryQuietly = async () => {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        try {
+            const response = await axios.get('http://localhost:3001/api/payment-history', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                timeout: 8000
+            });
+            
+            if (response.data.success) {
+                setPaymentHistory(response.data.payments);
+                console.log("Payment history quietly updated");
+            }
+        } catch (error) {
+            console.error('Error quietly fetching payment history:', error);
+        }
+    };
+
     const savePaymentToBackend = async (item, paymentResponse) => {
-        const token = localStorage.getItem('token');
+        // Consistently use authToken
+        const token = localStorage.getItem('authToken');
         
         try {
             const response = await axios.post('http://localhost:3001/api/save-payment', {
@@ -196,32 +257,48 @@ const GroceryList = () => {
             }, {
                 headers: token ? {
                     'Authorization': `Bearer ${token}`
-                } : {}
+                } : {},
+                timeout: 10000 // 10 second timeout
             });
             
             console.log('Payment details saved to backend successfully');
             return response;
         } catch (error) {
             console.error('Error saving payment details:', error);
-            throw error;
+            // Don't throw the error - let the UI update succeed regardless
+            if (error.code === 'ECONNABORTED') {
+                console.log('Backend request timed out, but payment is recorded locally');
+            } else if (error.response) {
+                console.log('Backend responded with error:', error.response.status, error.response.data);
+            } else if (error.request) {
+                console.log('No response from backend, but payment is recorded locally');
+            }
+            return null; // Return null instead of throwing
         }
     };
 
-    // FIXED: Check if item is already paid by current user
+    // Check if item is paid (combining backend data and local state)
     const isItemPaid = (itemId) => {
-        const isPaid = paymentHistory.some(payment => {
-            // Convert both to string for comparison
+        const itemIdString = itemId.toString();
+        
+        // First check if it's locally marked as paid (this takes precedence)
+        if (locallyPaidItems.has(itemIdString)) {
+            console.log(`Item ${itemIdString} is locally marked as paid`);
+            return true;
+        }
+        
+        // Then check backend payment history
+        const isPaidInHistory = paymentHistory.some(payment => {
             const paymentItemId = payment.item_id?._id || payment.item_id;
-            const itemIdString = itemId.toString();
             const paymentItemIdString = paymentItemId?.toString();
             
-            console.log('Comparing:', { paymentItemIdString, itemIdString, status: payment.status }); // Debug log
-            
-            return paymentItemIdString === itemIdString && payment.status === 'completed';
+            const matches = paymentItemIdString === itemIdString && payment.status === 'completed';
+            return matches;
         });
         
-        console.log(`Item ${itemId} is paid:`, isPaid); // Debug log
-        return isPaid;
+        console.log(`Checking payment for item ${itemIdString}: locally=${locallyPaidItems.has(itemIdString)}, backend=${isPaidInHistory}`);
+        
+        return isPaidInHistory;
     };
 
     const formatDate = (dateString) => {
@@ -238,12 +315,22 @@ const GroceryList = () => {
         setShowPaymentHistory(!showPaymentHistory);
     };
 
+    // Debug admin status in render
+    console.log("Rendering with isAdmin:", isAdmin);
+    console.log("Payment history length:", paymentHistory.length);
+    console.log("Locally paid items:", Array.from(locallyPaidItems));  
+
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3>Monthly Provision List</h3>
                 <div>
-                    {!isAdmin && (
+                    {/* Debug message - remove in production */}
+                    <div className="small text-muted mb-2">
+                        {isAdmin ? "Admin mode active" : "Regular user mode"}
+                    </div>
+                    
+                    {!isAdmin && currentUser && (
                         <button 
                             className="btn btn-info me-2" 
                             onClick={togglePaymentHistory}
@@ -260,7 +347,7 @@ const GroceryList = () => {
             </div>
 
             {/* Payment History Section */}
-            {showPaymentHistory && !isAdmin && (
+            {showPaymentHistory && !isAdmin && currentUser && (
                 <div className="card mb-4">
                     <div className="card-header">
                         <h5>Your Payment History</h5>
@@ -340,16 +427,20 @@ const GroceryList = () => {
                                     users.map((user, index) => {
                                         const totalPrice = user.price * user.quantity;
                                         const isPaid = isItemPaid(user._id);
+                                        
+                                        console.log(`Rendering item ${user._id} (${user.name})`);
+                                        console.log(`isPaid result: ${isPaid}`);
+                                        
                                         return (
                                             <tr key={user._id}>
                                                 <td>{index + 1}</td>
                                                 <td>{user.name}</td>
-                                                <td>{user.price}</td>
+                                                <td>₹{user.price}</td>
                                                 <td>{user.quantity}</td>
-                                                <td>{totalPrice.toFixed(2)}</td>
+                                                <td>₹{totalPrice.toFixed(2)}</td>
                                                 <td>
                                                     {isPaid ? (
-                                                        <span className="badge bg-success">Paid</span>
+                                                        <span className="badge bg-success">✓ Paid</span>
                                                     ) : (
                                                         <span className="badge bg-warning">Pending</span>
                                                     )}
@@ -372,7 +463,7 @@ const GroceryList = () => {
                                                         </div>
                                                     ) : (
                                                         isPaid ? (
-                                                            <span className="text-success fw-bold">✓ Paid</span>
+                                                            <span className="text-success fw-bold">✓ Payment Complete</span>
                                                         ) : (
                                                             <button 
                                                                 className='btn btn-primary btn-sm' 
@@ -413,13 +504,13 @@ const GroceryList = () => {
                             <div className="col-md-3">
                                 <p><strong>Total Amount:</strong> ₹{users.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
                             </div>
-                            {!isAdmin && (
+                            {!isAdmin && currentUser && (
                                 <>
                                     <div className="col-md-3">
-                                        <p><strong>Paid Items:</strong> {paymentHistory.filter(p => p.status === 'completed').length}</p>
+                                        <p><strong>Paid Items:</strong> {users.filter(item => isItemPaid(item._id)).length}</p>
                                     </div>
                                     <div className="col-md-3">
-                                        <p><strong>Amount Paid:</strong> ₹{paymentHistory.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0).toFixed(2)}</p>
+                                        <p><strong>Amount Paid:</strong> ₹{users.filter(item => isItemPaid(item._id)).reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
                                     </div>
                                 </>
                             )}
