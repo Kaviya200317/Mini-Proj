@@ -372,7 +372,7 @@ const GroceryList = () => {
                                             <tr key={payment._id}>
                                                 <td>{formatDate(payment.timestamp || payment.created_at)}</td>
                                                 <td>{payment.item_name}</td>
-                                                <td>₹{payment.amount.toFixed(2)}</td>
+                                                <td>{payment.amount.toFixed(2)}</td>
                                                 <td>
                                                     <small className="text-muted">
                                                         {payment.payment_id}
@@ -435,9 +435,9 @@ const GroceryList = () => {
                                             <tr key={user._id}>
                                                 <td>{index + 1}</td>
                                                 <td>{user.name}</td>
-                                                <td>₹{user.price}</td>
+                                                <td>{user.price}</td>
                                                 <td>{user.quantity}</td>
-                                                <td>₹{totalPrice.toFixed(2)}</td>
+                                                <td>{totalPrice.toFixed(2)}</td>
                                                 <td>
                                                     {isPaid ? (
                                                         <span className="badge bg-success">✓ Paid</span>
@@ -502,7 +502,7 @@ const GroceryList = () => {
                                 <p><strong>Total Items:</strong> {users.length}</p>
                             </div>
                             <div className="col-md-3">
-                                <p><strong>Total Amount:</strong> ₹{users.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
+                                <p><strong>Total Amount:</strong> {users.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
                             </div>
                             {!isAdmin && currentUser && (
                                 <>
@@ -510,7 +510,7 @@ const GroceryList = () => {
                                         <p><strong>Paid Items:</strong> {users.filter(item => isItemPaid(item._id)).length}</p>
                                     </div>
                                     <div className="col-md-3">
-                                        <p><strong>Amount Paid:</strong> ₹{users.filter(item => isItemPaid(item._id)).reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
+                                        <p><strong>Amount Paid:</strong> {users.filter(item => isItemPaid(item._id)).reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
                                     </div>
                                 </>
                             )}

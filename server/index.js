@@ -414,7 +414,7 @@ app.post("/api/auth/register", async (req, res) => {
     }
 
     // Set isAdmin true if email is admin@example.com (for testing purposes)
-    const isAdmin = email.toLowerCase() === 'admin@example.com';
+    const isAdmin = email.toLowerCase() === 'admin1@example.com';
 
     // Create new user with phone field
     const user = new User({
